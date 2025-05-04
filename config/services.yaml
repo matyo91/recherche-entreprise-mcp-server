@@ -29,3 +29,16 @@ services:
             $datacenterId: '%env(ASTRA_DATACENTER_ID)%'
             $keyspace: '%env(ASTRA_KEYSPACE)%'
             $token: '%env(ASTRA_TOKEN)%'
+            #$arizeService: '@App\Service\ArizeService'
+
+    App\Service\ArizeService:
+        arguments:
+            $arizeApiKey: '%env(ARIZE_API_KEY)%'
+            $modelId: '%env(ARIZE_MODEL_ID)%'
+            $spaceId: '%env(ARIZE_SPACE_ID)%'
+
+    App\Service\DatasetExperimentService:
+        arguments:
+            $arizeApiKey: '%env(ARIZE_API_KEY)%'
+            $modelId: '%env(ARIZE_MODEL_ID)%'
+            $spaceId: '%env(ARIZE_SPACE_ID)%'

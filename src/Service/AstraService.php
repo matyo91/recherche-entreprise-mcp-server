@@ -14,7 +14,8 @@ class AstraService
         private readonly string $openAiApiToken,
         private readonly string $datacenterId,
         private readonly string $keyspace,
-        private readonly string $token
+        private readonly string $token,
+        private readonly ?ArizeService $arizeService = null
     ) {
     }
 
@@ -54,6 +55,15 @@ class AstraService
 
         $data = json_decode($response->getContent(), true);
         $embedding = $data['data'][0]['embedding'];
+
+        // Log to Arize if service is available
+        if ($this->arizeService) {
+            $this->arizeService->logPrediction(
+                ['text' => $textToEmbed],
+                ['embedding_dimensions' => count($embedding)],
+                ['embedding_time_ms' => $response->getInfo('total_time') * 1000]
+            );
+        }
 
         // Ajouter l'embedding aux données de l'entreprise
         $entreprise['$vector'] = $embedding;
