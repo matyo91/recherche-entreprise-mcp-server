@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Service\AstraService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -13,14 +14,15 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[AsCommand(
     name: 'app:recherche-entreprise',
-    description: 'Recherche une entreprise via l\'API Recherche d\'Entreprises',
+    description: 'Recherche une entreprise via l\'API Recherche d\'Entreprises et stocke les résultats dans Astra',
 )]
 class RechercheEntrepriseCommand extends Command
 {
     private const API_URL = 'https://recherche-entreprises.api.gouv.fr/search';
 
     public function __construct(
-        private readonly HttpClientInterface $httpClient
+        private readonly HttpClientInterface $httpClient,
+        private readonly AstraService $astraService
     ) {
         parent::__construct();
     }
@@ -42,6 +44,7 @@ class RechercheEntrepriseCommand extends Command
             ->addOption('tranche-effectif', 't', InputOption::VALUE_OPTIONAL, 'Tranche d\'effectif')
             ->addOption('minimal', 'm', InputOption::VALUE_NONE, 'Retourne une réponse minimale')
             ->addOption('include', 'i', InputOption::VALUE_OPTIONAL, 'Champs à inclure (complements, dirigeants, finances, matching_etablissements, siege, score)')
+            ->addOption('no-save', null, InputOption::VALUE_NONE, 'Ne pas sauvegarder les résultats dans Astra')
         ;
     }
 
@@ -137,6 +140,16 @@ class RechercheEntrepriseCommand extends Command
                 }
 
                 $io->newLine();
+            }
+
+            // Sauvegarde dans Astra si l'option --no-save n'est pas spécifiée
+            if (!$input->getOption('no-save')) {
+                try {
+                    $this->astraService->upsertEntreprises($data['results']);
+                    $io->success('Données sauvegardées dans Astra');
+                } catch (\Exception $e) {
+                    $io->error(sprintf('Erreur lors de la sauvegarde dans Astra : %s', $e->getMessage()));
+                }
             }
 
             $io->info(sprintf('Page %s/%s - %s résultats trouvés', 

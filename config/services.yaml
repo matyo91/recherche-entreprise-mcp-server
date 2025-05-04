@@ -22,3 +22,10 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Service\AstraService:
+        arguments:
+            $openAiApiToken: '%env(OPENAI_API_TOKEN)%'
+            $datacenterId: '%env(ASTRA_DATACENTER_ID)%'
+            $keyspace: '%env(ASTRA_KEYSPACE)%'
+            $token: '%env(ASTRA_TOKEN)%'

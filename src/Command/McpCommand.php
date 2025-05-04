@@ -110,6 +110,11 @@ class McpCommand extends Command
                                 'command_name' => [
                                     'type' => 'string',
                                 ],
+                                'parameters' => [
+                                    'type' => 'object',
+                                    'description' => 'Additional parameters for the command',
+                                    'default' => new \stdClass(),
+                                ],
                             ],
                             'required' => [
                                 'command_name',
@@ -130,7 +135,10 @@ class McpCommand extends Command
 
         return match ($name) {
             'list_commands' =>  $this->callCommand('list', ['--format' => 'md']),
-            'call_command' => $this->callCommand($arguments['command_name']),
+            'call_command' => $this->callCommand(
+                $arguments['command_name'],
+                isset($arguments['parameters']) && is_array($arguments['parameters']) ? $arguments['parameters'] : []
+            ),
             default => $this->sendProtocolError(\sprintf('Tool "%s" not found', $name)),
         };
     }
@@ -139,7 +147,8 @@ class McpCommand extends Command
     {
         $command = $this->getApplication()->find($commandName);
 
-        $input = new ArrayInput(['command' => $command, ...$parameters]);
+        $inputParams = array_merge(['command' => $command], $parameters);
+        $input = new ArrayInput($inputParams);
         $output = new BufferedOutput();
 
         $command->run($input, $output);
